@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3D Print Order Form</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -203,6 +203,13 @@
     .price-wrap input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
     .price-wrap input[type="number"]:focus { border-color: var(--amber); }
 
+    .price-wrap.price-required input[type="number"] {
+      border-color: var(--danger);
+    }
+    .price-wrap.price-required::before {
+      color: var(--danger);
+    }
+
     /* Per-row line total */
     .line-total {
       font-family: var(--mono);
@@ -379,13 +386,15 @@
       text-align: left;
     }
     .recap-line {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.75rem;
       font-family: var(--mono);
       font-size: 0.95rem;
       color: var(--text);
-      padding: 0.2rem 0;
+      padding: 0.3rem 0;
       border-bottom: 1px solid var(--border);
+      align-items: baseline;
     }
     .recap-line:last-of-type { border-bottom: none; }
     .recap-line .desc { color: var(--muted); }
@@ -551,6 +560,7 @@
     <input type="hidden" name="subject" value="New 3D Print Order" />
     <input type="hidden" name="_replyto" id="replyto-field" />
 
+    <div id="validation-error" style="display:none; margin-bottom:0.75rem; font-family:var(--mono); font-size:0.85rem; color:var(--danger);"></div>
     <button type="submit" class="submit-btn" id="submit-btn">Submit Order</button>
   </form>
 
@@ -559,6 +569,7 @@
     <h2>Order received!</h2>
     <p>Thanks — I'll be in touch if I have any questions.</p>
     <p style="margin-top:0.6rem; color:var(--amber); font-family:var(--mono); font-size:0.85rem;">Please screenshot or print this page for your records.</p>
+    <p style="margin-top:0.5rem; color:var(--muted); font-family:var(--mono); font-size:0.82rem;">Made a mistake? Just reach out and let me know before sending payment.</p>
 
     <div class="recap-block">
       <div class="section-label" style="margin-bottom:0.6rem;">Your order</div>
@@ -619,7 +630,7 @@
       <input type="text" placeholder="e.g. Knitted panda" class="desc-input"
              aria-label="Item description" />
       <div class="qty-wrap">
-        <input type="number" min="1" step="1" value="1" class="qty-input"
+        <input type="number" min="1" step="1" placeholder="1" class="qty-input"
                aria-label="Quantity" />
       </div>
       <div class="price-wrap">
@@ -636,8 +647,15 @@
 
     qtyInput.addEventListener('input',   updateTotal);
     priceInput.addEventListener('input', updateTotal);
-    descInput.addEventListener('input',  updateUI);
-    priceInput.addEventListener('input', updateUI);
+    descInput.addEventListener('input', () => {
+      const qty = row.querySelector('.qty-input');
+      if (descInput.value.trim() && !qty.value) qty.value = 1;
+      if (!descInput.value.trim()) qty.value = '';
+      updateUI();
+      updateTotal();
+      validateRow(row);
+    });
+    priceInput.addEventListener('input', () => { updateUI(); updateTotal(); validateRow(row); });
     row.querySelector('.remove-btn').addEventListener('click', () => {
       row.remove();
       rowCount--;
@@ -653,7 +671,7 @@
   function updateTotal() {
     let sum = 0;
     document.querySelectorAll('.order-row').forEach(row => {
-      const qty   = parseFloat(row.querySelector('.qty-input').value)   || 0;
+      const qty   = parseFloat(row.querySelector('.qty-input').value)   || 1;
       const price = parseFloat(row.querySelector('.price-input').value) || 0;
       const lineTotal = qty * price;
       sum += lineTotal;
@@ -667,6 +685,25 @@
       totalEl.classList.add('bump');
       setTimeout(() => totalEl.classList.remove('bump'), 120);
     }
+  }
+
+  function validateRow(row) {
+    const desc  = row.querySelector('.desc-input').value.trim();
+    const price = row.querySelector('.price-input').value.trim();
+    const priceWrap = row.querySelector('.price-wrap');
+    const needsPrice = desc && !price;
+    priceWrap.classList.toggle('price-required', needsPrice);
+  }
+
+  function validateAll() {
+    const rows = [...document.querySelectorAll('.order-row')];
+    const offenders = rows.filter(r => {
+      const desc  = r.querySelector('.desc-input').value.trim();
+      const price = r.querySelector('.price-input').value.trim();
+      return desc && !price;
+    });
+    offenders.forEach(r => validateRow(r));
+    return offenders.length === 0;
   }
 
   function updateUI() {
@@ -690,11 +727,37 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Build summary string for the hidden field
+    const errorEl = document.getElementById('validation-error');
+
+    // Check at least one row is populated
     const rows = [...document.querySelectorAll('.order-row')];
+    const populated = rows.filter(r => {
+      const desc  = r.querySelector('.desc-input').value.trim();
+      const price = r.querySelector('.price-input').value.trim();
+      return desc || price;
+    });
+
+    if (populated.length === 0) {
+      errorEl.textContent = '⚠ Please add at least one item before submitting.';
+      errorEl.style.display = 'block';
+      errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Check all descriptions have a price
+    if (!validateAll()) {
+      errorEl.textContent = '⚠ Please enter a price for every item with a description.';
+      errorEl.style.display = 'block';
+      errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    errorEl.style.display = 'none';
+
+    // Build summary string for the hidden field
     const lines = rows.map(r => {
       const desc  = r.querySelector('.desc-input').value.trim() || '(no description)';
-      const qty   = parseFloat(r.querySelector('.qty-input').value)   || 0;
+      const qty   = parseFloat(r.querySelector('.qty-input').value)   || 1;
       const price = parseFloat(r.querySelector('.price-input').value) || 0;
       return { desc, qty, price, total: qty * price };
     }).filter(r => r.desc !== '(no description)' || r.price > 0);
@@ -721,13 +784,16 @@
       });
 
       if (res.ok) {
-        // Populate recap
+        // Populate recap with full unit price breakdown
         const recapLines = document.getElementById('recap-lines');
-        recapLines.innerHTML = lines.map(r =>
-          `<div class="recap-line">
-             <span class="desc">${r.desc} <span style="color:var(--muted);font-size:0.82rem;">×${r.qty}</span></span>
-             <span>$${r.total.toFixed(2)}</span>
-           </div>`
+        recapLines.innerHTML = lines.map(r => `
+          <div class="recap-line">
+            <span class="desc">${r.desc}</span>
+            <span style="color:var(--muted);font-size:0.85rem;white-space:nowrap;">
+              ${r.qty} × $${r.price.toFixed(2)}
+            </span>
+            <span>$${r.total.toFixed(2)}</span>
+          </div>`
         ).join('');
         document.getElementById('recap-total-amt').textContent = totalEl.textContent;
 
