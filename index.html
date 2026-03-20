@@ -502,6 +502,9 @@
         <button type="button" class="add-btn" id="add-btn">+ Add item</button>
         <span class="row-count" id="row-count"></span>
       </div>
+      <div id="limit-msg" style="display:none; margin-top:0.6rem; font-family:var(--mono); font-size:0.82rem; color:var(--amber);">
+        That's a big order! If you have more items, please submit this order first and then start a second one.
+      </div>
     </div>
 
     <!-- ── Total ── -->
@@ -593,7 +596,7 @@
 </div>
 
 <script>
-  const MAX_ROWS = 10;
+  const MAX_ROWS = 25;
   const rowsEl   = document.getElementById('rows');
   const addBtn    = document.getElementById('add-btn');
   const totalEl   = document.getElementById('total');
@@ -665,7 +668,9 @@
 
   function updateUI() {
     addBtn.disabled = rowCount >= MAX_ROWS;
-    countEl.textContent = rowCount > 0 ? `${rowCount} / ${MAX_ROWS} items` : '';
+    countEl.textContent = rowCount > 0 ? `${rowCount} item${rowCount > 1 ? 's' : ''}` : '';
+    const limitMsg = document.getElementById('limit-msg');
+    if (limitMsg) limitMsg.style.display = rowCount >= MAX_ROWS ? 'block' : 'none';
   }
 
   addBtn.addEventListener('click', addRow);
