@@ -619,7 +619,7 @@
 
   let rowCount = 0;
 
-  function addRow() {
+  function addRow(userInitiated = false) {
     if (rowCount >= MAX_ROWS) return;
     rowCount++;
 
@@ -665,7 +665,7 @@
 
     rowsEl.appendChild(row);
     updateUI();
-    row.querySelector('.desc-input').focus();
+    if (userInitiated) row.querySelector('.desc-input').focus();
   }
 
   function updateTotal() {
@@ -718,7 +718,7 @@
     if (limitMsg) limitMsg.style.display = rowCount >= MAX_ROWS ? 'block' : 'none';
   }
 
-  addBtn.addEventListener('click', addRow);
+  addBtn.addEventListener('click', () => addRow(true));
 
   // Start with 3 rows
   addRow(); addRow(); addRow();
