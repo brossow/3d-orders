@@ -632,9 +632,12 @@
 
     const qtyInput   = row.querySelector('.qty-input');
     const priceInput = row.querySelector('.price-input');
+    const descInput  = row.querySelector('.desc-input');
 
     qtyInput.addEventListener('input',   updateTotal);
     priceInput.addEventListener('input', updateTotal);
+    descInput.addEventListener('input',  updateUI);
+    priceInput.addEventListener('input', updateUI);
     row.querySelector('.remove-btn').addEventListener('click', () => {
       row.remove();
       rowCount--;
@@ -668,7 +671,12 @@
 
   function updateUI() {
     addBtn.disabled = rowCount >= MAX_ROWS;
-    countEl.textContent = rowCount > 0 ? `${rowCount} item${rowCount > 1 ? 's' : ''}` : '';
+    const populated = [...document.querySelectorAll('.order-row')].filter(r => {
+      const desc  = r.querySelector('.desc-input').value.trim();
+      const price = r.querySelector('.price-input').value.trim();
+      return desc || price;
+    }).length;
+    countEl.textContent = populated > 0 ? `${populated} item${populated > 1 ? 's' : ''}` : '';
     const limitMsg = document.getElementById('limit-msg');
     if (limitMsg) limitMsg.style.display = rowCount >= MAX_ROWS ? 'block' : 'none';
   }
