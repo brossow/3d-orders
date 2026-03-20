@@ -321,20 +321,9 @@
       transition: all 0.15s;
     }
     .pay-link:hover { border-color: var(--amber); color: var(--amber); }
+    .pay-link.pay-static { cursor: default; }
+    .pay-link.pay-static:hover { border-color: var(--border); color: var(--text); }
     .pay-link .icon { font-size: 1.2rem; }
-    .pay-inperson {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--bg);
-      border: 1px dashed var(--border);
-      border-radius: 4px;
-      padding: 0.65rem 0.85rem;
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 0.95rem;
-    }
     .ff-note {
       margin-top: 0.85rem;
       background: rgba(251,191,36,0.07);
@@ -531,8 +520,7 @@
     <!-- ── Payment ── -->
     <div class="payment-section">
       <p class="section-label">04 — Send Payment</p>
-      <p>After submitting, please send the total above via one of these options.<br>
-         Use your name as the payment note so I can match it up.</p>
+      <p>After submitting, please send the total above via one of these options.</p>
       <div class="payment-options">
         <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener">
           <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
@@ -543,10 +531,10 @@
         <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
           <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
         </a>
-        <div class="pay-link" style="cursor:default;">
+        <div class="pay-link pay-static">
           <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
         </div>
-        <div class="pay-inperson">
+        <div class="pay-link pay-static" style="grid-column: 1 / -1;">
           <span class="icon">🤝</span> In person — cash works great, just let me know
         </div>
       </div>
@@ -558,6 +546,7 @@
     <!-- ── Hidden: serialized order summary ── -->
     <input type="hidden" id="order-summary" name="order_summary" />
     <input type="hidden" name="subject" value="New 3D Print Order" />
+    <input type="hidden" name="_replyto" id="replyto-field" />
 
     <button type="submit" class="submit-btn" id="submit-btn">Submit Order</button>
   </form>
@@ -565,7 +554,7 @@
   <div id="success-msg">
     <div class="check">✅</div>
     <h2>Order received!</h2>
-    <p>Thanks — I'll be in touch if I have any questions.<br>Use your name as the payment note so I can match it up.</p>
+    <p>Thanks — I'll be in touch if I have any questions.</p>
 
     <div class="recap-block">
       <div class="section-label" style="margin-bottom:0.6rem;">Your order</div>
@@ -587,12 +576,12 @@
       <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
         <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
       </a>
-      <div class="pay-link" style="cursor:default;">
-        <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
-      </div>
-      <div class="pay-inperson">
-        <span class="icon">🤝</span> In person — cash works great, just let me know
-      </div>
+      <div class="pay-link pay-static">
+          <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
+        </div>
+        <div class="pay-link pay-static" style="grid-column: 1 / -1;">
+          <span class="icon">🤝</span> In person — cash works great, just let me know
+        </div>
     </div>
     <div class="ff-note" style="margin-top:0.85rem;">
       ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
@@ -701,6 +690,10 @@
     );
 
     summaryEl.value = lineStrings.join('\n') + '\n\nTotal: ' + totalEl.textContent;
+
+    // Copy email into _replyto so Formspree can send the submitter a confirmation
+    const emailVal = document.getElementById('email').value.trim();
+    document.getElementById('replyto-field').value = emailVal;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting…';
