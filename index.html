@@ -526,7 +526,7 @@
     <div class="field-group">
       <p class="section-label">03 — Notes (optional)</p>
       <label for="notes">Filament color preference, deadline, anything else</label>
-      <textarea id="notes" name="notes" placeholder="e.g. Black PLA, need it by Friday"></textarea>
+      <textarea id="notes" name="notes" placeholder="e.g., Black PLA, need it by Friday"></textarea>
     </div>
 
     <!-- ── Payment ── -->
@@ -558,7 +558,6 @@
     <!-- ── Hidden: serialized order summary ── -->
     <input type="hidden" id="order-summary" name="order_summary" />
     <input type="hidden" name="subject" value="New 3D Print Order" />
-    <input type="hidden" name="_replyto" id="replyto-field" />
 
     <div id="validation-error" style="display:none; margin-bottom:0.75rem; font-family:var(--mono); font-size:0.85rem; color:var(--danger);"></div>
     <button type="submit" class="submit-btn" id="submit-btn">Submit Order</button>
@@ -627,7 +626,7 @@
     row.className = 'order-row';
     row.dataset.id = rowCount;
     row.innerHTML = `
-      <input type="text" placeholder="e.g. Knitted panda" class="desc-input"
+      <input type="text" placeholder="Ex: Flexi dragon (red)" class="desc-input"
              aria-label="Item description" />
       <div class="qty-wrap">
         <input type="number" min="1" step="1" placeholder="1" class="qty-input"
@@ -767,10 +766,6 @@
     );
 
     summaryEl.value = lineStrings.join('\n') + '\n\nTotal: ' + totalEl.textContent;
-
-    // Copy email into _replyto so Formspree can send the submitter a confirmation
-    const emailVal = document.getElementById('email').value.trim();
-    document.getElementById('replyto-field').value = emailVal;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting…';
