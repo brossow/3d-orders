@@ -294,21 +294,7 @@
       transform: scale(1.15);
     }
 
-    /* ── Payment ── */
-    .payment-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1.25rem;
-      margin-bottom: 2rem;
-    }
-    .payment-section p {
-      font-family: var(--mono);
-      font-size: 0.92rem;
-      color: var(--muted);
-      margin-bottom: 1rem;
-      line-height: 1.6;
-    }
+    /* ── Payment options ── */
     .payment-options {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -318,7 +304,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: var(--bg);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 4px;
       padding: 0.65rem 0.85rem;
@@ -523,29 +509,29 @@
     </div>
 
     <!-- ── Payment ── -->
-    <div class="payment-section">
+    <div class="field-group">
       <p class="section-label">04 — Send Payment</p>
-      <p>After submitting, please send the total above via one of these options.</p>
+      <p style="font-family:var(--mono); font-size:0.92rem; color:var(--muted); margin-bottom:1rem; line-height:1.6;">After submitting, please send the total above via one of these options.</p>
       <div class="payment-options">
-        <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener">
-          <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
-        </a>
-        <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener">
-          <span class="icon">🅿</span> PayPal &nbsp;<strong>@BRossow</strong>
-        </a>
-        <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
-          <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
-        </a>
-        <div class="pay-link pay-static">
-          <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
+          <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener">
+            <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
+          </a>
+          <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener">
+            <span class="icon">🅿</span> PayPal &nbsp;<strong>@BRossow</strong>
+          </a>
+          <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
+            <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
+          </a>
+          <div class="pay-link pay-static">
+            <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
+          </div>
+          <div class="pay-link pay-static" style="grid-column: 1 / -1;">
+            <span class="icon">🤝</span> In person — cash works great, just let me know
+          </div>
         </div>
-        <div class="pay-link pay-static" style="grid-column: 1 / -1;">
-          <span class="icon">🤝</span> In person — cash works great, just let me know
+        <div class="ff-note">
+          ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
         </div>
-      </div>
-      <div class="ff-note">
-        ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
-      </div>
     </div>
 
     <!-- ── Hidden: serialized order summary ── -->
