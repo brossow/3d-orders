@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3D Print Order Form</title>
@@ -420,14 +421,23 @@
       letter-spacing: 0.05em;
     }
 
+    /* ── Utility messages ── */
+    .form-msg {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      display: none;
+    }
+    #limit-msg      { color: var(--amber); margin-top: 0.6rem; font-size: 0.82rem; }
+    #validation-error { color: var(--danger); }
+
     @media (max-width: 540px) {
       body { font-size: 16px; padding: 1.25rem 0.85rem 3rem; }
       h1 { font-size: 1.6rem; }
 
-      /* Stack order rows into cards on small screens */
       .order-header { display: none; }
       .order-row {
-        grid-template-columns: 1fr 36px;
+        grid-template-columns: 50px 1fr 60px 36px;
         grid-template-rows: auto auto;
         gap: 0.4rem;
         background: var(--surface);
@@ -435,24 +445,7 @@
         border-radius: 4px;
         padding: 0.6rem;
       }
-      .order-row input[type="text"] {
-        grid-column: 1 / 2;
-        grid-row: 1;
-      }
-      /* Qty, price, and line total on one row */
-      .order-row .qty-wrap,
-      .order-row .price-wrap,
-      .order-row .line-total {
-        grid-row: 2;
-      }
-      .order-row {
-        grid-template-columns: 50px 1fr 60px 36px;
-        grid-template-rows: auto auto;
-      }
-      .order-row input[type="text"] {
-        grid-column: 1 / 4;
-        grid-row: 1;
-      }
+      .order-row input[type="text"] { grid-column: 1 / 4; grid-row: 1; }
       .order-row .qty-wrap   { grid-column: 1; grid-row: 2; }
       .order-row .price-wrap { grid-column: 2; grid-row: 2; }
       .order-row .line-total { grid-column: 3; grid-row: 2; align-self: center; }
@@ -465,7 +458,7 @@
       }
 
       .payment-options { grid-template-columns: 1fr; }
-      .pay-link, .pay-inperson { font-size: 1rem; }
+      .pay-link { font-size: 1rem; }
       .ff-note { font-size: 0.85rem; }
       .submit-btn { font-size: 1rem; padding: 1rem; }
     }
@@ -511,7 +504,7 @@
         <button type="button" class="add-btn" id="add-btn">+ Add item</button>
         <span class="row-count" id="row-count"></span>
       </div>
-      <div id="limit-msg" style="display:none; margin-top:0.6rem; font-family:var(--mono); font-size:0.82rem; color:var(--amber);">
+      <div id="limit-msg" class="form-msg">
         That's a big order! If you have more items, please submit this order first and then start a second one.
       </div>
     </div>
@@ -559,7 +552,7 @@
     <input type="hidden" id="order-summary" name="order_summary" />
     <input type="hidden" name="subject" value="New 3D Print Order" />
 
-    <div id="validation-error" style="display:none; margin-bottom:0.75rem; font-family:var(--mono); font-size:0.85rem; color:var(--danger);"></div>
+    <div id="validation-error" class="form-msg"></div>
     <button type="submit" class="submit-btn" id="submit-btn">Submit Order</button>
   </form>
 
@@ -591,11 +584,11 @@
         <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
       </a>
       <div class="pay-link pay-static">
-          <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
-        </div>
-        <div class="pay-link pay-static" style="grid-column: 1 / -1;">
-          <span class="icon">🤝</span> In person — cash works great, just let me know
-        </div>
+        <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
+      </div>
+      <div class="pay-link pay-static" style="grid-column: 1 / -1;">
+        <span class="icon">🤝</span> In person — cash works great, just let me know
+      </div>
     </div>
     <div class="ff-note" style="margin-top:0.85rem;">
       ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
@@ -646,8 +639,10 @@
   const successEl = document.getElementById('success-msg');
   const submitBtn = document.getElementById('submit-btn');
   const summaryEl = document.getElementById('order-summary');
-  const limitMsg  = document.getElementById('limit-msg');
-  const errorEl   = document.getElementById('validation-error');
+  const limitMsg    = document.getElementById('limit-msg');
+  const errorEl     = document.getElementById('validation-error');
+  const recapLines  = document.getElementById('recap-lines');
+  const recapTotal  = document.getElementById('recap-total-amt');
 
   let rowCount = 0;
 
@@ -804,14 +799,14 @@
       });
 
       if (res.ok) {
-        document.getElementById('recap-lines').innerHTML = lines.map(r => `
+        recapLines.innerHTML = lines.map(r => `
           <div class="recap-line">
             <span class="desc">${r.desc}</span>
             <span style="color:var(--muted);font-size:0.85rem;white-space:nowrap;">${r.qty} × $${r.price.toFixed(2)}</span>
             <span>$${r.total.toFixed(2)}</span>
           </div>`
         ).join('');
-        document.getElementById('recap-total-amt').textContent = totalEl.textContent;
+        recapTotal.textContent = totalEl.textContent;
 
         form.style.display = 'none';
         successEl.style.display = 'block';
