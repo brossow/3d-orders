@@ -607,6 +607,29 @@
 
 <script>
   const MAX_ROWS = 25;
+
+  const EXAMPLES = [
+    'Ex: Flexi dragon (red)',
+    'Ex: Knitted panda (white)',
+    'Ex: Cable organizer (black)',
+    'Ex: Succulent planter (terracotta)',
+    'Ex: Desk name plate (blue)',
+    'Ex: Articulated fish (orange)',
+    'Ex: Phone stand (gray)',
+    'Ex: Keychain — initials (green)',
+    'Ex: Mini screwdriver holder (black)',
+    'Ex: Wall hook set of 3 (white)',
+    'Ex: Fidget cube (purple)',
+    'Ex: Toothbrush holder (white)',
+    'Ex: Magnetic clip (black)',
+    'Ex: Tiny octopus (teal)',
+    'Ex: Luggage tag (yellow)',
+  ];
+
+  function getExamples(count) {
+    const shuffled = [...EXAMPLES].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
   const rowsEl   = document.getElementById('rows');
   const addBtn    = document.getElementById('add-btn');
   const totalEl   = document.getElementById('total');
@@ -618,7 +641,7 @@
 
   let rowCount = 0;
 
-  function addRow(userInitiated = false) {
+  function addRow(userInitiated = false, placeholder = 'Ex: Flexi dragon (red)') {
     if (rowCount >= MAX_ROWS) return;
     rowCount++;
 
@@ -626,7 +649,7 @@
     row.className = 'order-row';
     row.dataset.id = rowCount;
     row.innerHTML = `
-      <input type="text" placeholder="Ex: Flexi dragon (red)" class="desc-input"
+      <input type="text" placeholder="${placeholder}" class="desc-input"
              aria-label="Item description" />
       <div class="qty-wrap">
         <input type="number" min="1" step="1" placeholder="1" class="qty-input"
@@ -719,8 +742,9 @@
 
   addBtn.addEventListener('click', () => addRow(true));
 
-  // Start with 3 rows
-  addRow(); addRow(); addRow();
+  // Start with 3 rows using random examples
+  const initialExamples = getExamples(3);
+  initialExamples.forEach(ex => addRow(false, ex));
 
   // On submit: serialize order rows, post to Formspree
   form.addEventListener('submit', async (e) => {
