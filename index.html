@@ -626,28 +626,38 @@
     'Ex: Luggage tag (yellow)',
   ];
 
-  function getExamples(count) {
-    const shuffled = [...EXAMPLES].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+  // Shuffle once and cycle through so examples never repeat until the pool is exhausted
+  let examplePool = [...EXAMPLES].sort(() => Math.random() - 0.5);
+  let exampleIndex = 0;
+  function nextExample() {
+    if (exampleIndex >= examplePool.length) {
+      examplePool = [...EXAMPLES].sort(() => Math.random() - 0.5);
+      exampleIndex = 0;
+    }
+    return examplePool[exampleIndex++];
   }
+
+  // Cache DOM references
   const rowsEl   = document.getElementById('rows');
-  const addBtn    = document.getElementById('add-btn');
-  const totalEl   = document.getElementById('total');
-  const countEl   = document.getElementById('row-count');
-  const form      = document.getElementById('order-form');
+  const addBtn   = document.getElementById('add-btn');
+  const totalEl  = document.getElementById('total');
+  const countEl  = document.getElementById('row-count');
+  const form     = document.getElementById('order-form');
   const successEl = document.getElementById('success-msg');
   const submitBtn = document.getElementById('submit-btn');
   const summaryEl = document.getElementById('order-summary');
+  const limitMsg  = document.getElementById('limit-msg');
+  const errorEl   = document.getElementById('validation-error');
 
   let rowCount = 0;
 
-  function addRow(userInitiated = false, placeholder = 'Ex: Flexi dragon (red)') {
+  function addRow(userInitiated = false) {
     if (rowCount >= MAX_ROWS) return;
     rowCount++;
 
+    const placeholder = nextExample();
     const row = document.createElement('div');
     row.className = 'order-row';
-    row.dataset.id = rowCount;
     row.innerHTML = `
       <input type="text" placeholder="${placeholder}" class="desc-input"
              aria-label="Item description" />
@@ -663,21 +673,26 @@
       <button type="button" class="remove-btn" aria-label="Remove row">✕</button>
     `;
 
+    const descInput  = row.querySelector('.desc-input');
     const qtyInput   = row.querySelector('.qty-input');
     const priceInput = row.querySelector('.price-input');
-    const descInput  = row.querySelector('.desc-input');
 
-    qtyInput.addEventListener('input',   updateTotal);
-    priceInput.addEventListener('input', updateTotal);
     descInput.addEventListener('input', () => {
-      const qty = row.querySelector('.qty-input');
-      if (descInput.value.trim() && !qty.value) qty.value = 1;
-      if (!descInput.value.trim()) qty.value = '';
-      updateUI();
+      if (descInput.value.trim() && !qtyInput.value) qtyInput.value = 1;
+      if (!descInput.value.trim()) qtyInput.value = '';
       updateTotal();
-      validateRow(row);
+      updateUI();
+      validateRow(row, descInput, priceInput);
     });
-    priceInput.addEventListener('input', () => { updateUI(); updateTotal(); validateRow(row); });
+
+    priceInput.addEventListener('input', () => {
+      updateTotal();
+      updateUI();
+      validateRow(row, descInput, priceInput);
+    });
+
+    qtyInput.addEventListener('input', updateTotal);
+
     row.querySelector('.remove-btn').addEventListener('click', () => {
       row.remove();
       rowCount--;
@@ -687,7 +702,7 @@
 
     rowsEl.appendChild(row);
     updateUI();
-    if (userInitiated) row.querySelector('.desc-input').focus();
+    if (userInitiated) descInput.focus();
   }
 
   function updateTotal() {
@@ -697,8 +712,8 @@
       const price = parseFloat(row.querySelector('.price-input').value) || 0;
       const lineTotal = qty * price;
       sum += lineTotal;
-      const ltEl = row.querySelector('.line-total');
-      ltEl.textContent = (qty > 0 && price > 0) ? '$' + lineTotal.toFixed(2) : '—';
+      row.querySelector('.line-total').textContent =
+        price > 0 ? '$' + lineTotal.toFixed(2) : '—';
     });
 
     const formatted = '$' + sum.toFixed(2);
@@ -709,56 +724,47 @@
     }
   }
 
-  function validateRow(row) {
-    const desc  = row.querySelector('.desc-input').value.trim();
-    const price = row.querySelector('.price-input').value.trim();
-    const priceWrap = row.querySelector('.price-wrap');
-    const needsPrice = desc && !price;
-    priceWrap.classList.toggle('price-required', needsPrice);
+  function validateRow(row, descInput, priceInput) {
+    const needsPrice = descInput.value.trim() && !priceInput.value.trim();
+    row.querySelector('.price-wrap').classList.toggle('price-required', needsPrice);
   }
 
   function validateAll() {
-    const rows = [...document.querySelectorAll('.order-row')];
-    const offenders = rows.filter(r => {
-      const desc  = r.querySelector('.desc-input').value.trim();
-      const price = r.querySelector('.price-input').value.trim();
-      return desc && !price;
+    let valid = true;
+    document.querySelectorAll('.order-row').forEach(row => {
+      const descInput  = row.querySelector('.desc-input');
+      const priceInput = row.querySelector('.price-input');
+      const needsPrice = descInput.value.trim() && !priceInput.value.trim();
+      row.querySelector('.price-wrap').classList.toggle('price-required', needsPrice);
+      if (needsPrice) valid = false;
     });
-    offenders.forEach(r => validateRow(r));
-    return offenders.length === 0;
+    return valid;
   }
 
   function updateUI() {
     addBtn.disabled = rowCount >= MAX_ROWS;
-    const populated = [...document.querySelectorAll('.order-row')].filter(r => {
-      const desc  = r.querySelector('.desc-input').value.trim();
-      const price = r.querySelector('.price-input').value.trim();
-      return desc || price;
-    }).length;
+    const populated = [...document.querySelectorAll('.order-row')].filter(r =>
+      r.querySelector('.desc-input').value.trim() ||
+      r.querySelector('.price-input').value.trim()
+    ).length;
     countEl.textContent = populated > 0 ? `${populated} item${populated > 1 ? 's' : ''}` : '';
-    const limitMsg = document.getElementById('limit-msg');
-    if (limitMsg) limitMsg.style.display = rowCount >= MAX_ROWS ? 'block' : 'none';
+    limitMsg.style.display = rowCount >= MAX_ROWS ? 'block' : 'none';
   }
 
   addBtn.addEventListener('click', () => addRow(true));
 
-  // Start with 3 rows using random examples
-  const initialExamples = getExamples(3);
-  initialExamples.forEach(ex => addRow(false, ex));
+  // Start with 3 rows
+  addRow(); addRow(); addRow();
 
-  // On submit: serialize order rows, post to Formspree
+  // Submit handler
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const errorEl = document.getElementById('validation-error');
-
-    // Check at least one row is populated
-    const rows = [...document.querySelectorAll('.order-row')];
-    const populated = rows.filter(r => {
-      const desc  = r.querySelector('.desc-input').value.trim();
-      const price = r.querySelector('.price-input').value.trim();
-      return desc || price;
-    });
+    const allRows = [...document.querySelectorAll('.order-row')];
+    const populated = allRows.filter(r =>
+      r.querySelector('.desc-input').value.trim() ||
+      r.querySelector('.price-input').value.trim()
+    );
 
     if (populated.length === 0) {
       errorEl.textContent = '⚠ Please add at least one item before submitting.';
@@ -767,7 +773,6 @@
       return;
     }
 
-    // Check all descriptions have a price
     if (!validateAll()) {
       errorEl.textContent = '⚠ Please enter a price for every item with a description.';
       errorEl.style.display = 'block';
@@ -777,40 +782,32 @@
 
     errorEl.style.display = 'none';
 
-    // Build summary string for the hidden field
-    const lines = rows.map(r => {
-      const desc  = r.querySelector('.desc-input').value.trim() || '(no description)';
+    const lines = populated.map(r => {
+      const desc  = r.querySelector('.desc-input').value.trim();
       const qty   = parseFloat(r.querySelector('.qty-input').value)   || 1;
       const price = parseFloat(r.querySelector('.price-input').value) || 0;
       return { desc, qty, price, total: qty * price };
-    }).filter(r => r.desc !== '(no description)' || r.price > 0);
+    });
 
-    const lineStrings = lines.map((r, i) =>
+    summaryEl.value = lines.map((r, i) =>
       `${i+1}. ${r.desc} — qty ${r.qty} × $${r.price.toFixed(2)} = $${r.total.toFixed(2)}`
-    );
-
-    summaryEl.value = lineStrings.join('\n') + '\n\nTotal: ' + totalEl.textContent;
+    ).join('\n') + '\n\nTotal: ' + totalEl.textContent;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting…';
 
     try {
-      const data = new FormData(form);
-      const res  = await fetch(form.action, {
+      const res = await fetch(form.action, {
         method: 'POST',
-        body: data,
+        body: new FormData(form),
         headers: { 'Accept': 'application/json' }
       });
 
       if (res.ok) {
-        // Populate recap with full unit price breakdown
-        const recapLines = document.getElementById('recap-lines');
-        recapLines.innerHTML = lines.map(r => `
+        document.getElementById('recap-lines').innerHTML = lines.map(r => `
           <div class="recap-line">
             <span class="desc">${r.desc}</span>
-            <span style="color:var(--muted);font-size:0.85rem;white-space:nowrap;">
-              ${r.qty} × $${r.price.toFixed(2)}
-            </span>
+            <span style="color:var(--muted);font-size:0.85rem;white-space:nowrap;">${r.qty} × $${r.price.toFixed(2)}</span>
             <span>$${r.total.toFixed(2)}</span>
           </div>`
         ).join('');
