@@ -88,23 +88,38 @@
       position: relative;
     }
 
-    /* ── Theme toggle ── */
-    .theme-toggle {
+    /* ── Theme toggle (segmented) ── */
+    .theme-seg {
       position: absolute;
       top: 0;
       right: 0;
-      background: var(--surface);
+      display: flex;
       border: 1px solid var(--border);
       border-radius: 4px;
+      overflow: hidden;
+    }
+    .theme-seg button {
+      background: var(--surface);
+      border: none;
+      border-radius: 0;
       color: var(--muted);
       cursor: pointer;
       font-family: var(--mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
-      padding: 0.35rem 0.65rem;
-      transition: all 0.15s;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.6rem;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1;
     }
-    .theme-toggle:hover { border-color: var(--amber); color: var(--amber); }
+    .theme-seg button:first-child {
+      border-right: 1px solid var(--border);
+    }
+    .theme-seg button.active {
+      background: var(--amber);
+      color: var(--btn-text);
+    }
+    .theme-seg button:not(.active):hover {
+      color: var(--amber);
+    }
     header::before {
       content: '▲';
       font-size: 1.8rem;
@@ -397,7 +412,6 @@
       cursor: pointer;
       font-family: var(--display);
       font-size: 1rem;
-      font-weight: 700;
       letter-spacing: 0.03em;
       padding: 0.9rem;
       transition: all 0.15s;
@@ -419,6 +433,8 @@
     #success-msg .check { font-size: 2.5rem; margin-bottom: 0.75rem; }
     #success-msg h2 { color: var(--amber); margin-bottom: 0.5rem; }
     #success-msg p { color: var(--muted); font-family: var(--mono); font-size: 0.95rem; line-height: 1.7; }
+    #success-msg .success-note-amber { color: var(--amber); }
+    #success-msg .success-note-muted { color: var(--muted); }
 
     /* ── Recap block (post-submit) ── */
     .recap-block {
@@ -460,8 +476,36 @@
       text-align: center;
       font-family: var(--mono);
       font-size: 0.8rem;
-      color: #444;
+      color: var(--muted);
       letter-spacing: 0.05em;
+    }
+
+    /* ── Success page notes ── */
+    .success-note-amber {
+      margin-top: 0.6rem;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+    .success-note-muted {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+    .recap-breakdown {
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    /* ── Payment intro ── */
+    .payment-intro {
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      line-height: 1.6;
     }
 
     /* ── Utility messages ── */
@@ -505,13 +549,51 @@
       .ff-note { font-size: 0.85rem; }
       .submit-btn { font-size: 1rem; padding: 1rem; }
     }
-  </style>
+    @media print {
+      /* Force light background and dark text regardless of theme */
+      :root, [data-theme="light"], [data-theme="dark"] {
+        --bg:        #ffffff;
+        --surface:   #f5f5f5;
+        --border:    #cccccc;
+        --amber:     #1a5c3a;
+        --amber-dim: #1a5c3a;
+        --text:      #111111;
+        --muted:     #555555;
+        --ff-bg:     #f0f0f0;
+      }
+
+      /* Hide everything except the success message */
+      header, form, footer, .theme-seg { display: none !important; }
+      #success-msg {
+        display: block !important;
+        border: none;
+        padding: 0;
+        background: none;
+        margin: 0;
+      }
+
+      /* Clean up success message for print */
+      #success-msg h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+      .recap-block { border: 1px solid #ccc; }
+      .payment-options, .ff-note, .success-note-muted { display: none !important; }
+      .section-label[style] { margin-top: 0 !important; }
+
+      body {
+        background: #ffffff;
+        background-image: none;
+        font-size: 14px;
+        padding: 1rem;
+      }
+    }
 </head>
 <body>
 <div class="page">
 
   <header>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark theme">☀ light</button>
+    <div class="theme-seg" role="group" aria-label="Color theme">
+      <button id="btn-light" aria-label="Light mode">☀</button>
+      <button id="btn-dark"  aria-label="Dark mode">☾</button>
+    </div>
     <h1>3D Print<br><span>Order Form</span></h1>
     <p class="subtitle">// fill out · submit · send payment · done</p>
   </header>
@@ -522,11 +604,11 @@
     <div class="field-group">
       <p class="section-label">01 — Your Info</p>
       <label for="name">Name</label>
-      <input type="text" id="name" name="name" placeholder="First Last" required />
+      <input type="text" id="name" name="name" placeholder="First Last" required autocomplete="name" />
     </div>
     <div class="field-group">
       <label for="email">Email (so I can follow up if needed)</label>
-      <input type="email" id="email" name="email" placeholder="you@example.com" />
+      <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" />
     </div>
 
     <!-- ── Order Lines ── -->
@@ -569,27 +651,27 @@
     <!-- ── Payment ── -->
     <div class="field-group">
       <p class="section-label">04 — Send Payment</p>
-      <p style="font-family:var(--mono); font-size:0.92rem; color:var(--muted); margin-bottom:1rem; line-height:1.6;">After submitting, please send the total above via one of these options.</p>
+      <p class="payment-intro">After submitting, please send the total above via one of these options.</p>
       <div class="payment-options">
-          <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener">
-            <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
-          </a>
-          <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener">
-            <span class="icon">🅿</span> PayPal &nbsp;<strong>@BRossow</strong>
-          </a>
-          <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
-            <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
-          </a>
-          <div class="pay-link pay-static">
-            <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
-          </div>
-          <div class="pay-link pay-static" style="grid-column: 1 / -1;">
-            <span class="icon">🤝</span> In person — cash works great, just let me know
-          </div>
+        <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener noreferrer">
+          <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
+        </a>
+        <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener noreferrer">
+          <span class="icon">🅿</span> PayPal &nbsp;<strong>@BRossow</strong>
+        </a>
+        <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener noreferrer">
+          <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
+        </a>
+        <div class="pay-link pay-static">
+          <span class="icon">⚡</span> Zelle &nbsp;<span style="color:var(--muted);font-size:0.78rem;">ask me directly</span>
         </div>
-        <div class="ff-note">
-          ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
+        <div class="pay-link pay-static" style="grid-column: 1 / -1;">
+          <span class="icon">🤝</span> In person — cash works great, just let me know
         </div>
+      </div>
+      <div class="ff-note">
+        ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
+      </div>
     </div>
 
     <!-- ── Hidden: serialized order summary ── -->
@@ -604,8 +686,8 @@
     <div class="check">✅</div>
     <h2>Order received!</h2>
     <p>Thanks — I'll be in touch if I have any questions.</p>
-    <p style="margin-top:0.6rem; color:var(--amber); font-family:var(--mono); font-size:0.85rem;">Please screenshot or print this page for your records.</p>
-    <p style="margin-top:0.5rem; color:var(--muted); font-family:var(--mono); font-size:0.82rem;">Made a mistake? Just reach out and let me know before sending payment.</p>
+    <p class="success-note-amber">Please screenshot or print this page for your records.</p>
+    <p class="success-note-muted">Made a mistake? Just reach out and let me know before sending payment.</p>
 
     <div class="recap-block">
       <div class="section-label" style="margin-bottom:0.6rem;">Your order</div>
@@ -618,13 +700,13 @@
 
     <div class="section-label" style="margin:1.2rem 0 0.6rem;">Send payment via</div>
     <div class="payment-options">
-      <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener">
+      <a class="pay-link" href="https://venmo.com/BRossow" target="_blank" rel="noopener noreferrer">
         <span class="icon">💸</span> Venmo &nbsp;<strong>@BRossow</strong>
       </a>
-      <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener">
+      <a class="pay-link" href="https://paypal.me/BRossow" target="_blank" rel="noopener noreferrer">
         <span class="icon">🅿</span> PayPal &nbsp;<strong>@BRossow</strong>
       </a>
-      <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener">
+      <a class="pay-link" href="https://cash.app/$BrentRossow" target="_blank" rel="noopener noreferrer">
         <span class="icon">💵</span> Cash App &nbsp;<strong>$BrentRossow</strong>
       </a>
       <div class="pay-link pay-static">
@@ -639,14 +721,15 @@
     </div>
   </div>
 
-  <footer>made with ▲ filament &amp; javascript</footer>
+  <footer id="footer-quote"></footer>
 </div>
 
 <script>
   // ── Theme management ──
-  const COOKIE = 'theme';
-  const root   = document.documentElement;
-  const toggle = document.getElementById('theme-toggle');
+  const COOKIE   = 'theme';
+  const root     = document.documentElement;
+  const btnDark  = document.getElementById('btn-dark');
+  const btnLight = document.getElementById('btn-light');
 
   function getSystemTheme() {
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
@@ -667,21 +750,58 @@
 
   function applyTheme(theme) {
     root.setAttribute('data-theme', theme);
-    toggle.textContent = theme === 'dark' ? '☀ light' : '☾ dark';
-    toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+    btnDark.classList.toggle('active',  theme === 'dark');
+    btnLight.classList.toggle('active', theme === 'light');
+    btnDark.setAttribute('aria-pressed',  theme === 'dark');
+    btnLight.setAttribute('aria-pressed', theme === 'light');
   }
 
   // Apply saved cookie, or fall back to OS preference
   applyTheme(getCookie(COOKIE) || getSystemTheme());
 
-  toggle.addEventListener('click', () => {
-    const current = root.getAttribute('data-theme') || getSystemTheme();
-    const next = current === 'dark' ? 'light' : 'dark';
-    setCookie(COOKIE, next);
-    applyTheme(next);
-  });
+  btnDark.addEventListener('click', () => { setCookie(COOKIE, 'dark');  applyTheme('dark');  });
+  btnLight.addEventListener('click', () => { setCookie(COOKIE, 'light'); applyTheme('light'); });
 
   // ── Rest of app ──
+
+  // Sanitize user input before inserting into HTML
+  function escapeHTML(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ── Footer quotes ──
+  const QUOTES = [
+    "your panda will be ready when it's ready.",
+    "not a business. just a guy with a printer and too many coworkers.",
+    "layer 1 of approximately 4,000. we'll be here a while.",
+    "no, I can't print you a car. I've been asked.",
+    "it's not magic. it's just very slow plastic.",
+    "every order starts with a conversation and ends with a tiny dragon.",
+    "supports not included. patience is.",
+    "printed with care, mild sleep deprivation, and PLA.",
+    "if it looks a little stringy, that's called character.",
+    "yes, the triangle is a 3D printing thing. no, I won't explain further.",
+    "the printer is always on. I am not always awake.",
+    "your order is safe. the spaghettification was on a different build.",
+    "estimated delivery: done when it's done.",
+    "I've been doing this long enough to have opinions about bed adhesion.",
+    "fun fact: the first layer is the most stressful part. for me, not you.",
+    "objects in mirror are closer than they appear. objects on print bed are not done yet.",
+    "I print things. you pay me. it's a beautiful system.",
+    "technically a hobby. emotionally a lifestyle.",
+    "the filament doesn't feel your deadlines.",
+    "quality takes time. quantity takes more filament. you're getting both.",
+    "if you can dream it, I can probably print it. if you can describe it, even better.",
+    "this form was not 3D printed. unfortunately.",
+    "zero items currently lost. one item currently taking forever. normal operations.",
+    "built different. literally.",
+    "some assembly may not be required. depends on what you ordered.",
+  ];
+
+  document.getElementById('footer-quote').textContent =
+    QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
   const MAX_ROWS = 25;
 
   const EXAMPLES = [
@@ -763,20 +883,41 @@
       validateRow(row, descInput, priceInput);
     });
 
+    // Block invalid price keystrokes (minus, e, E, +) but allow decimal
+    priceInput.addEventListener('keydown', (e) => {
+      if (['-', 'e', 'E', '+'].includes(e.key)) e.preventDefault();
+      if (e.key === '.' && priceInput.value.includes('.')) e.preventDefault();
+    });
+
     priceInput.addEventListener('input', () => {
-      if (parseFloat(priceInput.value) < 0) priceInput.value = '';
       updateTotal();
       updateUI();
       validateRow(row, descInput, priceInput);
     });
 
-    qtyInput.addEventListener('input', () => {
-      // Strip decimals and negative values
+    // Backstop for mobile keyboards + clamp on leave
+    priceInput.addEventListener('blur', () => {
+      const val = parseFloat(priceInput.value);
+      if (isNaN(val) || val < 0) priceInput.value = '';
+      updateTotal();
+      updateUI();
+      validateRow(row, descInput, priceInput);
+    });
+
+    // Block non-integer keystrokes (decimal, minus, e)
+    qtyInput.addEventListener('keydown', (e) => {
+      if (['.', '-', 'e', 'E', '+'].includes(e.key)) e.preventDefault();
+    });
+
+    // Backstop for mobile keyboards that ignore keydown
+    qtyInput.addEventListener('blur', () => {
       let val = parseInt(qtyInput.value);
       if (isNaN(val) || val < 1) qtyInput.value = descInput.value.trim() ? 1 : '';
       else qtyInput.value = val;
       updateTotal();
     });
+
+    qtyInput.addEventListener('input', updateTotal);
 
     row.querySelector('.remove-btn').addEventListener('click', () => {
       row.remove();
@@ -891,8 +1032,8 @@
       if (res.ok) {
         recapLines.innerHTML = lines.map(r => `
           <div class="recap-line">
-            <span class="desc">${r.desc}</span>
-            <span style="color:var(--muted);font-size:0.85rem;white-space:nowrap;">${r.qty} × $${r.price.toFixed(2)}</span>
+            <span class="desc">${escapeHTML(r.desc)}</span>
+            <span class="recap-breakdown">${r.qty} × $${r.price.toFixed(2)}</span>
             <span>$${r.total.toFixed(2)}</span>
           </div>`
         ).join('');
