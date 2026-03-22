@@ -795,6 +795,11 @@
               .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  // Format a number as currency with commas
+  function formatMoney(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   // ── Footer quotes ──
   const QUOTES = [
     "your panda will be ready when it's ready.",
@@ -964,10 +969,10 @@
       const lineTotal = qty * price;
       sum += lineTotal;
       row.querySelector('.line-total').textContent =
-        price > 0 ? '$' + lineTotal.toFixed(2) : '—';
+        price > 0 ? formatMoney(lineTotal) : '—';
     });
 
-    const formatted = '$' + sum.toFixed(2);
+    const formatted = formatMoney(sum);
     if (totalEl.textContent !== formatted) {
       totalEl.textContent = formatted;
       totalEl.classList.add('bump');
@@ -1072,8 +1077,8 @@
         recapLines.innerHTML = lines.map(r => `
           <div class="recap-line">
             <span class="desc">${escapeHTML(r.desc)}</span>
-            <span class="recap-breakdown">${r.qty} × $${r.price.toFixed(2)}</span>
-            <span>$${r.total.toFixed(2)}</span>
+            <span class="recap-breakdown">${r.qty.toLocaleString('en-US')} × ${formatMoney(r.price)}</span>
+            <span>${formatMoney(r.total)}</span>
           </div>`
         ).join('');
         recapTotal.textContent = totalEl.textContent;
