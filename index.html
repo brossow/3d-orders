@@ -764,12 +764,19 @@
     });
 
     priceInput.addEventListener('input', () => {
+      if (parseFloat(priceInput.value) < 0) priceInput.value = '';
       updateTotal();
       updateUI();
       validateRow(row, descInput, priceInput);
     });
 
-    qtyInput.addEventListener('input', updateTotal);
+    qtyInput.addEventListener('input', () => {
+      // Strip decimals and negative values
+      let val = parseInt(qtyInput.value);
+      if (isNaN(val) || val < 1) qtyInput.value = descInput.value.trim() ? 1 : '';
+      else qtyInput.value = val;
+      updateTotal();
+    });
 
     row.querySelector('.remove-btn').addEventListener('click', () => {
       row.remove();
