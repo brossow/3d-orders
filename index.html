@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3D Print Order Form</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,7 +20,46 @@
       --muted:     #b0b0b0;
       --danger:    #ef4444;
       --mono:      'IBM Plex Mono', monospace;
-      --display:   'Syne', sans-serif;
+      --display:   'Michroma', sans-serif;
+      --grid-line: rgba(245,158,11,0.03);
+      --btn-text:  #0f0f0f;
+      --btn-hover: #fbbf24;
+      --btn-shadow: rgba(245,158,11,0.3);
+      --ff-bg:     rgba(251,191,36,0.07);
+    }
+
+    [data-theme="light"] {
+      --bg:        #f5f0e8;
+      --surface:   #ede8de;
+      --border:    #c4b9a8;
+      --amber:     #2d6a4f;
+      --amber-dim: #52796f;
+      --text:      #1c1a18;
+      --muted:     #6b5e52;
+      --danger:    #b5372a;
+      --grid-line: rgba(45,106,79,0.06);
+      --btn-text:  #f5f0e8;
+      --btn-hover: #3a8463;
+      --btn-shadow: rgba(45,106,79,0.3);
+      --ff-bg:     rgba(45,106,79,0.07);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --bg:        #f5f0e8;
+        --surface:   #ede8de;
+        --border:    #c4b9a8;
+        --amber:     #2d6a4f;
+        --amber-dim: #52796f;
+        --text:      #1c1a18;
+        --muted:     #6b5e52;
+        --danger:    #b5372a;
+        --grid-line: rgba(45,106,79,0.06);
+        --btn-text:  #f5f0e8;
+        --btn-hover: #3a8463;
+        --btn-shadow: rgba(45,106,79,0.3);
+        --ff-bg:     rgba(45,106,79,0.07);
+      }
     }
 
     body {
@@ -31,8 +70,8 @@
       min-height: 100vh;
       padding: 2rem 1rem 4rem;
       background-image:
-        linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px);
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
       background-size: 32px 32px;
     }
 
@@ -48,6 +87,24 @@
       margin-bottom: 2.5rem;
       position: relative;
     }
+
+    /* ── Theme toggle ── */
+    .theme-toggle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 0.65rem;
+      transition: all 0.15s;
+    }
+    .theme-toggle:hover { border-color: var(--amber); color: var(--amber); }
     header::before {
       content: '▲';
       font-size: 1.8rem;
@@ -61,10 +118,10 @@
       50% { opacity: 0.4; }
     }
     h1 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      line-height: 1.1;
+      font-size: 2.4rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      line-height: 1.2;
     }
     h1 span { color: var(--amber); }
     .subtitle {
@@ -256,7 +313,7 @@
       padding: 0.4rem 0.8rem;
       transition: all 0.15s;
     }
-    .add-btn:hover { border-color: var(--amber); background: rgba(245,158,11,0.05); }
+    .add-btn:hover { border-color: var(--amber); background: var(--ff-bg); }
     .add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .row-count {
       font-family: var(--mono);
@@ -320,7 +377,7 @@
     .pay-link .icon { font-size: 1.2rem; }
     .ff-note {
       margin-top: 0.85rem;
-      background: rgba(251,191,36,0.07);
+      background: var(--ff-bg);
       border: 1px solid var(--amber-dim);
       border-radius: 4px;
       padding: 0.65rem 0.85rem;
@@ -336,7 +393,7 @@
       background: var(--amber);
       border: none;
       border-radius: 4px;
-      color: #0f0f0f;
+      color: var(--btn-text);
       cursor: pointer;
       font-family: var(--display);
       font-size: 1rem;
@@ -345,7 +402,7 @@
       padding: 0.9rem;
       transition: all 0.15s;
     }
-    .submit-btn:hover { background: #fbbf24; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(245,158,11,0.3); }
+    .submit-btn:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 4px 20px var(--btn-shadow); }
     .submit-btn:active { transform: translateY(0); }
     .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -454,6 +511,7 @@
 <div class="page">
 
   <header>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark theme">☀ light</button>
     <h1>3D Print<br><span>Order Form</span></h1>
     <p class="subtitle">// fill out · submit · send payment · done</p>
   </header>
@@ -585,6 +643,45 @@
 </div>
 
 <script>
+  // ── Theme management ──
+  const COOKIE = 'theme';
+  const root   = document.documentElement;
+  const toggle = document.getElementById('theme-toggle');
+
+  function getSystemTheme() {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  function getCookie(name) {
+    return document.cookie.split('; ').reduce((val, pair) => {
+      const [k, v] = pair.split('=');
+      return k === name ? v : val;
+    }, null);
+  }
+
+  function setCookie(name, value) {
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1);
+    document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/`;
+  }
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    toggle.textContent = theme === 'dark' ? '☀ light' : '☾ dark';
+    toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+  }
+
+  // Apply saved cookie, or fall back to OS preference
+  applyTheme(getCookie(COOKIE) || getSystemTheme());
+
+  toggle.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme') || getSystemTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    setCookie(COOKIE, next);
+    applyTheme(next);
+  });
+
+  // ── Rest of app ──
   const MAX_ROWS = 25;
 
   const EXAMPLES = [
