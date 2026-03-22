@@ -564,26 +564,51 @@
 
       /* Hide everything except the success message */
       header, form, footer, .theme-seg { display: none !important; }
-      #success-msg {
-        display: block !important;
-        border: none;
-        padding: 0;
-        background: none;
-        margin: 0;
-      }
-
-      /* Clean up success message for print */
-      #success-msg h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-      .recap-block { border: 1px solid #ccc; }
-      .payment-options, .ff-note, .success-note-muted { display: none !important; }
-      .section-label[style] { margin-top: 0 !important; }
 
       body {
-        background: #ffffff;
-        background-image: none;
-        font-size: 14px;
-        padding: 1rem;
+        background: #ffffff !important;
+        background-image: none !important;
+        font-size: 11pt !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
+
+      .page {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0.5in !important;
+      }
+
+      #success-msg {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+        background: none !important;
+        margin: 0 !important;
+        text-align: left !important;
+      }
+
+      #success-msg .check { font-size: 1.2rem; }
+      #success-msg h2 { font-size: 1.2rem; margin-bottom: 0.4rem; }
+      #success-msg p { font-size: 10pt; line-height: 1.5; }
+
+      .recap-block {
+        border: 1px solid #ccc !important;
+        margin-top: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+      }
+
+      .recap-line { font-size: 10pt; padding: 0.15rem 0; }
+      .recap-total { font-size: 11pt; }
+      .section-label { font-size: 8pt; }
+
+      /* Hide payment options and non-essential notes on print */
+      .payment-options,
+      .ff-note,
+      .success-note-muted,
+      #success-msg > .section-label,
+      #success-msg > .payment-options,
+      #success-msg > .ff-note { display: none !important; }
     }
   </style>
 <body>
