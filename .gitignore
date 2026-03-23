@@ -1,0 +1,3 @@
+# Private/sensitive files — not for GitHub
+_private/
+.DS_Store
