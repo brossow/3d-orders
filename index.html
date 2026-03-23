@@ -790,6 +790,12 @@
 
   // ── Rest of app ──
 
+  // Pre-fill name and email from previous order if available
+  const savedName  = getCookie('user_name');
+  const savedEmail = getCookie('user_email');
+  if (savedName)  document.getElementById('name').value  = savedName;
+  if (savedEmail) document.getElementById('email').value = savedEmail;
+
   // Sanitize user input before inserting into HTML
   function escapeHTML(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -1075,6 +1081,10 @@
       ]);
 
       if (formspreeRes.ok) {
+        // Remember name and email for next visit
+        setCookie('user_name',  document.getElementById('name').value.trim());
+        setCookie('user_email', document.getElementById('email').value.trim());
+
         recapLines.innerHTML = lines.map(r => `
           <div class="recap-line">
             <span class="desc">${escapeHTML(r.desc)}</span>
