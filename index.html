@@ -509,7 +509,80 @@
       line-height: 1.6;
     }
 
-    /* ── Utility messages ── */
+    /* ── Remember me ── */
+    .remember-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+    .remember-wrap input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--amber);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .remember-wrap label {
+      display: inline;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* ── Confirmation actions ── */
+    .confirm-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .print-btn {
+      background: var(--amber);
+      border: none;
+      border-radius: 4px;
+      color: var(--btn-text);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      padding: 0.55rem 1rem;
+      transition: all 0.15s;
+    }
+    .print-btn:hover { background: var(--btn-hover); }
+    .new-order-link {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      padding: 0.55rem 1rem;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+    }
+    .new-order-link:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* ── Confirmation cookie offer ── */
+    .confirm-remember {
+      display: none;
+      margin-top: 1rem;
+      background: var(--ff-bg);
+      border: 1px solid var(--amber-dim);
+      border-radius: 4px;
+      padding: 0.65rem 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: left;
+    }
+    .confirm-remember label { display: inline; cursor: pointer; color: var(--muted); margin: 0; font-size: 0.82rem; }
+    .confirm-remember input[type="checkbox"] { accent-color: var(--amber); cursor: pointer; margin-right: 0.4rem; }
     .form-msg {
       font-family: var(--mono);
       font-size: 0.85rem;
@@ -607,11 +680,14 @@
       .payment-options,
       .ff-note,
       .success-note-muted,
+      .confirm-actions,
+      .confirm-remember,
       #success-msg > .section-label,
       #success-msg > .payment-options,
       #success-msg > .ff-note { display: none !important; }
     }
   </style>
+</head>
 <body>
 <div class="page">
 
@@ -635,6 +711,10 @@
     <div class="field-group">
       <label for="email">Email (so I can follow up if needed)</label>
       <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" />
+      <div class="remember-wrap">
+        <input type="checkbox" id="remember-me" />
+        <label for="remember-me">Remember my name and email for next time</label>
+      </div>
     </div>
 
     <!-- ── Order Lines ── -->
@@ -702,6 +782,7 @@
 
     <!-- ── Hidden: serialized order summary ── -->
     <input type="hidden" id="order-summary" name="order_summary" />
+    <input type="hidden" id="order-total"   name="order_total" />
     <input type="hidden" name="subject" value="New 3D Print Order" />
 
     <div id="validation-error" class="form-msg"></div>
@@ -744,6 +825,16 @@
     </div>
     <div class="ff-note" style="margin-top:0.85rem;">
       ⚠ If using Venmo or PayPal, please send as <strong>Friends &amp; Family</strong> (not "Goods &amp; Services") — this avoids transaction fees being deducted from the payment.
+    </div>
+
+    <div id="confirm-remember" class="confirm-remember">
+      <input type="checkbox" id="confirm-remember-cb" />
+      <label for="confirm-remember-cb">Remember my name and email for next time</label>
+    </div>
+
+    <div class="confirm-actions">
+      <button class="print-btn" onclick="window.print()">🖨 Print this page</button>
+      <a class="new-order-link" href="javascript:location.reload()">+ Place another order</a>
     </div>
   </div>
 
@@ -793,8 +884,10 @@
   // Pre-fill name and email from previous order if available
   const savedName  = getCookie('user_name');
   const savedEmail = getCookie('user_email');
+  const rememberCb = document.getElementById('remember-me');
   if (savedName)  document.getElementById('name').value  = savedName;
   if (savedEmail) document.getElementById('email').value = savedEmail;
+  if (savedName || savedEmail) rememberCb.checked = true;
 
   // Sanitize user input before inserting into HTML
   function escapeHTML(str) {
@@ -883,6 +976,9 @@
   const errorEl     = document.getElementById('validation-error');
   const recapLines  = document.getElementById('recap-lines');
   const recapTotal  = document.getElementById('recap-total-amt');
+  const orderTotalEl = document.getElementById('order-total');
+  const confirmRemember = document.getElementById('confirm-remember');
+  const confirmRememberCb = document.getElementById('confirm-remember-cb');
 
   let rowCount = 0;
 
@@ -1052,9 +1148,10 @@
       return { desc, qty, price, total: qty * price };
     });
 
-    summaryEl.value = lines.map((r, i) =>
+    summaryEl.value   = lines.map((r, i) =>
       `${i+1}. ${r.desc} — qty ${r.qty} × $${r.price.toFixed(2)} = $${r.total.toFixed(2)}`
     ).join('\n') + '\n\nTotal: ' + totalEl.textContent;
+    orderTotalEl.value = totalEl.textContent;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting…';
@@ -1081,9 +1178,32 @@
       ]);
 
       if (formspreeRes.ok) {
-        // Remember name and email for next visit
-        setCookie('user_name',  document.getElementById('name').value.trim());
-        setCookie('user_email', document.getElementById('email').value.trim());
+        const nameVal  = document.getElementById('name').value.trim();
+        const emailVal = document.getElementById('email').value.trim();
+
+        // Handle remember-me cookie based on checkbox state
+        if (rememberCb.checked) {
+          setCookie('user_name',  nameVal);
+          setCookie('user_email', emailVal);
+        } else {
+          // Clear cookies if unchecked
+          document.cookie = 'user_name=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+          document.cookie = 'user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+        }
+
+        // Show confirmation-page cookie offer only if they didn't opt in on the form
+        if (!rememberCb.checked) {
+          confirmRemember.style.display = 'block';
+          confirmRememberCb.addEventListener('change', () => {
+            if (confirmRememberCb.checked) {
+              setCookie('user_name',  nameVal);
+              setCookie('user_email', emailVal);
+            } else {
+              document.cookie = 'user_name=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+              document.cookie = 'user_email=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+            }
+          });
+        }
 
         recapLines.innerHTML = lines.map(r => `
           <div class="recap-line">
